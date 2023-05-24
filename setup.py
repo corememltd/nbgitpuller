@@ -1,6 +1,7 @@
 from jupyter_packaging import wrap_installers, npm_builder
 from setuptools import find_packages, setup
-import os.path
+from distutils.util import convert_path
+import os
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -15,6 +16,17 @@ jsdeps = npm_builder(build_cmd="webpack", build_dir="nbgitpuller/static/dist", s
 cmdclass = wrap_installers(
     pre_develop=jsdeps, pre_dist=jsdeps,
     ensured_targets=jstargets)
+
+# Imports __version__, reference: https://stackoverflow.com/a/24517154/2220152
+ns = {}
+ver_path = convert_path('nbgitpuller/version.py')
+with open(ver_path) as ver_file:
+    exec(ver_file.read(), ns)
+__version__ = ns['__version__']
+
+# https://github.com/yarnpkg/yarn/issues/4546
+if os.getenv('http_proxy') and not os.getenv('https_proxy'):
+    os.environ.pop('http_proxy')
 
 setup(
     name='nbgitpuller',
